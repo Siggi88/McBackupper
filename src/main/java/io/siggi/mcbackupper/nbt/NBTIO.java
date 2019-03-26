@@ -44,7 +44,7 @@ public final class NBTIO {
 		DataOutputStream out = (outputStream instanceof DataOutputStream)
 				? ((DataOutputStream) outputStream)
 				: new DataOutputStream(outputStream);
-		writeNBTPrefix(out, new NBTPrefix(TAG_COMPOUND, fileData.rootName));
+		writeNBTPrefix(out, new NBTPrefix(TAG_COMPOUND, fileData.getRootName()));
 		writeTag(out, fileData.getRootCompound());
 
 	}
@@ -213,25 +213,6 @@ public final class NBTIO {
 			break;
 			default:
 				throw new NBTIOException("Unsupported TAG ID: " + tag.getType());
-		}
-	}
-
-	public static class NBTFileData {
-
-		private final String rootName;
-		private final NBTCompound rootCompound;
-
-		public String getRootName() {
-			return rootName;
-		}
-
-		public NBTCompound getRootCompound() {
-			return rootCompound;
-		}
-
-		public NBTFileData(String rootName, NBTCompound rootCompound) {
-			this.rootName = rootName;
-			this.rootCompound = rootCompound;
 		}
 	}
 
