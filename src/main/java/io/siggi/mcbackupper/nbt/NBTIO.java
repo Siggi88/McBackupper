@@ -4,10 +4,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class NBTIO {
+public final class NBTIO {
+
+	private NBTIO() {
+		// no instantiation!
+	}
 
 	private static final int TAG_END = 0;
 	private static final int TAG_BYTE = 1;
@@ -23,7 +28,7 @@ public class NBTIO {
 	private static final int TAG_INTARRAY = 11;
 	private static final int TAG_LONGARRAY = 12;
 
-	public NBTFileData read(InputStream inputStream) throws IOException {
+	public static NBTFileData read(InputStream inputStream) throws IOException {
 		DataInputStream in = (inputStream instanceof DataInputStream)
 				? ((DataInputStream) inputStream)
 				: new DataInputStream(inputStream);
@@ -35,7 +40,16 @@ public class NBTIO {
 		return new NBTFileData(rootPrefix.name, compound);
 	}
 
-	private NBTPrefix readNBTPrefix(DataInputStream in) throws IOException {
+	public static void write(OutputStream outputStream, NBTFileData fileData) throws IOException {
+		DataOutputStream out = (outputStream instanceof DataOutputStream)
+				? ((DataOutputStream) outputStream)
+				: new DataOutputStream(outputStream);
+		writeNBTPrefix(out, new NBTPrefix(TAG_COMPOUND, fileData.rootName));
+		writeTag(out, fileData.getRootCompound());
+
+	}
+
+	private static NBTPrefix readNBTPrefix(DataInputStream in) throws IOException {
 		int type = in.read();
 		if (type == 0) {
 			return new NBTPrefix(0, null); // it's a TAG_End
@@ -46,8 +60,8 @@ public class NBTIO {
 		String name = new String(n, StandardCharsets.UTF_8);
 		return new NBTPrefix(type, name);
 	}
-	
-	private void writeNBTPrefix(DataOutputStream out, NBTPrefix prefix) throws IOException {
+
+	private static void writeNBTPrefix(DataOutputStream out, NBTPrefix prefix) throws IOException {
 		out.write(prefix.type);
 		if (prefix.type != 0) {
 			byte[] n = prefix.name.getBytes(StandardCharsets.UTF_8);
@@ -56,7 +70,7 @@ public class NBTIO {
 		}
 	}
 
-	private NBTTag readTag(int type, DataInputStream in) throws IOException {
+	private static NBTTag readTag(int type, DataInputStream in) throws IOException {
 		switch (type) {
 			case TAG_BYTE:
 				return new NBTByte(in.readByte());
@@ -126,7 +140,7 @@ public class NBTIO {
 		}
 	}
 
-	private void writeTag(DataOutputStream out, NBTTag tag) throws IOException {
+	private static void writeTag(DataOutputStream out, NBTTag tag) throws IOException {
 		switch (tag.getType()) {
 			case TAG_BYTE:
 				out.writeByte(((NBTByte) tag).getByte());
@@ -171,7 +185,7 @@ public class NBTIO {
 			break;
 			case TAG_COMPOUND: {
 				NBTCompound compound = (NBTCompound) tag;
-				for (Map.Entry<String,NBTTag> entry : compound.entrySet()) {
+				for (Map.Entry<String, NBTTag> entry : compound.entrySet()) {
 					NBTPrefix pr = new NBTPrefix(entry.getValue().getType(), entry.getKey());
 					writeNBTPrefix(out, pr);
 					writeTag(out, entry.getValue());
@@ -202,7 +216,7 @@ public class NBTIO {
 		}
 	}
 
-	public class NBTFileData {
+	public static class NBTFileData {
 
 		private final String rootName;
 		private final NBTCompound rootCompound;
@@ -221,7 +235,7 @@ public class NBTIO {
 		}
 	}
 
-	private class NBTPrefix {
+	private static class NBTPrefix {
 
 		public final int type;
 		public final String name;
